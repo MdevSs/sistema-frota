@@ -1,57 +1,67 @@
-import { trpc } from "@/lib/trpc";
 import MainLayout from "@/components/MainLayout";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Truck, MapPin, Package, CheckCircle2, Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export default function DashboardPage() {
-  const { data, isLoading, error } = trpc.dashboard.getSummary.useQuery();
-
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          Erro ao carregar dashboard: {error.message}
-        </div>
-      </MainLayout>
-    );
-  }
+  // Hook preparado para o FastAPI, mas com fallback para dados mockados
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboard-summary'],
+    queryFn: async () => {
+      try {
+        const response = await api.get('/dashboard/summary');
+        return response.data;
+      } catch (e) {
+        console.warn("Usando dados mockados para o Dashboard (FastAPI offline)");
+        return {
+          motoristas: 0,
+          veiculos: 0,
+          rotas: 0,
+          entregas: 0,
+          entregasPendentes: 0,
+          entregasConcluidas: 0
+        };
+      }
+    }
+  });
 
   const stats = [
     {
       icon: Users,
       label: "Motoristas",
-      value: data?.data?.motoristas || 0,
+      value: data?.motoristas || 0,
       color: "bg-blue-100 text-blue-600",
     },
     {
       icon: Truck,
       label: "Veículos",
-      value: data?.data?.veiculos || 0,
+      value: data?.veiculos || 0,
       color: "bg-green-100 text-green-600",
     },
     {
       icon: MapPin,
       label: "Rotas",
-      value: data?.data?.rotas || 0,
+      value: data?.rotas || 0,
       color: "bg-purple-100 text-purple-600",
     },
     {
       icon: Package,
       label: "Entregas",
-      value: data?.data?.entregas || 0,
+      value: data?.entregas || 0,
       color: "bg-orange-100 text-orange-600",
     },
     {
       icon: Clock,
       label: "Pendentes",
-      value: data?.data?.entregasPendentes || 0,
+      value: data?.entregasPendentes || 0,
       color: "bg-yellow-100 text-yellow-600",
     },
     {
       icon: CheckCircle2,
       label: "Concluídas",
-      value: data?.data?.entregasConcluidas || 0,
+      value: data?.entregasConcluidas || 0,
       color: "bg-emerald-100 text-emerald-600",
     },
   ];
@@ -64,7 +74,6 @@ export default function DashboardPage() {
           <p className="text-slate-600 mt-2">Visão geral do sistema de logística</p>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
@@ -90,7 +99,6 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* Recent Activity */}
         <Card className="p-6">
           <h2 className="text-xl font-bold text-slate-900 mb-4">Atividades Recentes</h2>
           <div className="text-center py-8 text-slate-500">
