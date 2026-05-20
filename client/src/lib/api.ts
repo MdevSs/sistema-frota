@@ -15,6 +15,4 @@ export const api = axios.create({
 // Tipos básicos para compatibilidade
 export interface ApiResponse<T> {
   data: T;
-  success: boolean;
-  message?: string;
 }
